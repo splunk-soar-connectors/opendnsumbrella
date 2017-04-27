@@ -1,0 +1,363 @@
+# --
+# File: opendnsumbrella_connector.py
+#
+# Copyright (c) Phantom Cyber Corporation, 2014-2016
+#
+# This unpublished material is proprietary to Phantom Cyber.
+# All rights reserved. The methods and
+# techniques described herein are considered trade secrets
+# and/or confidential. Reproduction or distribution, in whole
+# or in part, is forbidden except by express written permission
+# of Phantom Cyber.
+#
+# --
+
+# Phantom imports
+import phantom.app as phantom
+from phantom.base_connector import BaseConnector
+from phantom.action_result import ActionResult
+
+# THIS Connector imports
+from opendnsumbrella_consts import *
+
+import requests
+import simplejson as json
+from datetime import datetime
+
+requests.packages.urllib3.disable_warnings()
+
+
+class OpendnsumbrellaConnector(BaseConnector):
+
+    # actions supported by this script
+    ACTION_ID_LIST_BLOCKED_DOMAINS = "list_blocked_domains"
+    ACTION_ID_BLOCK_DOMAIN = "block_domain"
+    ACTION_ID_UNBLOCK_DOMAIN = "unblock_domain"
+
+    def __init__(self):
+
+        # Call the BaseConnectors init first
+        super(OpendnsumbrellaConnector, self).__init__()
+
+    def initialize(self):
+
+        # Base URL
+        self._base_url = OPENDNSUMB_REST_API_URL
+        if (self._base_url.endswith('/')):
+            self._base_url = self._base_url[:-1]
+
+        self._host = self._base_url[self._base_url.find('//') + 2:]
+
+        self._base_url = '{0}/1.0'.format(self._base_url)
+
+        return phantom.APP_SUCCESS
+
+    def _get_error_message(self, resp_json, response):
+
+        ret_val = ''
+
+        if (not resp_json):
+            return ret_val
+
+        ret_val = resp_json.get('message', '')
+
+        if (response.status_code == 500):
+            ret_val += ". The service may be down or your license may have expired."
+
+        return ret_val
+
+    def _make_delete_rest_call(self, endpoint, action_result, request_params={}):
+
+        config = self.get_config()
+
+        request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
+
+        headers = {'Content-Type': 'application/json'}
+
+        resp_json = None
+        status_code = None
+
+        try:
+            r = requests.delete(self._base_url + endpoint, headers=headers, params=request_params, verify=config[phantom.APP_JSON_VERIFY])
+        except Exception as e:
+            return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_SERVER_CONNECTION, e), resp_json, status_code)
+
+        # self.debug_print('REST url: {0}'.format(r.url))
+
+        status_code = r.status_code
+
+        if (r.status_code == 204):  # success, but no data
+            return (phantom.APP_SUCCESS, resp_json, status_code)
+
+        if (r.status_code != requests.codes.ok):  # pylint: disable=E1101
+
+            try:
+                resp_json = r.json()
+            except:
+                return (action_result.set_status(phantom.APP_ERROR, "Response not a valid json"), resp_json, status_code)
+
+            return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_FROM_SERVER, status=r.status_code,
+                message=self._get_error_message(resp_json, r)), resp_json, status_code)
+
+        return (phantom.APP_SUCCESS, resp_json, status_code)
+
+    def _make_rest_call(self, endpoint, action_result, request_params={}):
+
+        config = self.get_config()
+
+        request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
+
+        headers = {'Content-Type': 'application/json'}
+
+        resp_json = None
+        status_code = None
+
+        try:
+            r = requests.get(self._base_url + endpoint, headers=headers, params=request_params, verify=config[phantom.APP_JSON_VERIFY])
+        except Exception as e:
+            return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_SERVER_CONNECTION, e), resp_json, status_code)
+
+        # self.debug_print('REST url: {0}'.format(r.url))
+
+        try:
+            resp_json = r.json()
+        except:
+            return (action_result.set_status(phantom.APP_ERROR, "Response not a valid json"), resp_json, status_code)
+
+        status_code = r.status_code
+
+        # if (r.status_code == 204):  # success, but no data
+        #     return (phantom.APP_SUCCESS, resp_json, status_code)
+
+        if (r.status_code != requests.codes.ok):  # pylint: disable=E1101
+            return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_FROM_SERVER, status=r.status_code,
+                message=self._get_error_message(resp_json, r)), resp_json, status_code)
+
+        return (phantom.APP_SUCCESS, resp_json, status_code)
+
+    def _make_post_rest_call(self, endpoint, action_result, data=None, request_params={}):
+
+        config = self.get_config()
+
+        request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
+
+        headers = {'Content-Type': 'application/json'}
+
+        resp_json = None
+        status_code = None
+
+        try:
+            r = requests.post(self._base_url + endpoint, data=json.dumps(data), headers=headers, params=request_params, verify=config[phantom.APP_JSON_VERIFY])
+        except Exception as e:
+            return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_SERVER_CONNECTION, e), resp_json, status_code)
+
+        # self.debug_print('REST url: {0}'.format(r.url))
+
+        try:
+            resp_json = r.json()
+        except:
+            return (action_result.set_status(phantom.APP_ERROR, "Response not a valid json"), resp_json, status_code)
+
+        status_code = r.status_code
+
+        if (r.status_code == 202):  # success, return from here, requests treats 202 as !ok
+            return (phantom.APP_SUCCESS, resp_json, status_code)
+
+        if (r.status_code != requests.codes.ok):  # pylint: disable=E1101
+            return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_FROM_SERVER, status=r.status_code,
+                message=self._get_error_message(resp_json, r)), resp_json, status_code)
+
+        return (phantom.APP_SUCCESS, resp_json, status_code)
+
+    def _test_connectivity(self, param):
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        endpoint = '/domains'
+
+        action_result = ActionResult()
+
+        self.save_progress(OPENDNSUMB_MSG_GET_DOMAIN_LIST_TEST)
+
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, {'page': 1, 'limit': 1})
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            self.set_status(phantom.APP_ERROR, action_result.get_message())
+            self.append_to_message(OPENDNSUMB_ERR_CONNECTIVITY_TEST)
+            return self.get_status()
+
+        return self.set_status_save_progress(phantom.APP_SUCCESS, OPENDNSUMB_SUCC_CONNECTIVITY_TEST)
+
+    def _list_blocked_domains(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        endpoint = '/domains'
+
+        page_index = param.get(OPENDNSUMB_JSON_PAGE_INDEX, OPENDNSUMB_DEFAULT_PAGE_INDEX)
+        domain_limit = param.get(OPENDNSUMB_JSON_DOMAIN_LIMIT, OPENDNSUMB_DEFAULT_DOMAIN_LIMIT)
+
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, {'page': page_index, 'limit': domain_limit})
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            return self.set_status(phantom.APP_ERROR, action_result.get_message())
+
+        domain_list = response.get('data', [])
+
+        action_result.update_summary({OPENDNSUMB_JSON_TOTAL_DOMAINS: len(domain_list)})
+
+        for domain in domain_list:
+            action_result.add_data(domain)
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _unblock_domain(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        endpoint = '/domains'
+
+        domain = param[OPENDNSUMB_JSON_DOMAIN]
+
+        request_params = {'where[name]': domain}
+
+        ret_val, response, status_code = self._make_delete_rest_call(endpoint, action_result, request_params)
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            return self.set_status(phantom.APP_ERROR, action_result.get_message())
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _block_domain(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        # Progress
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        # Connectivity
+        self.save_progress(phantom.APP_PROG_CONNECTING_TO_ELLIPSES, self._host)
+
+        ret_val, ret_data, status_code = self.get_container_info()
+
+        if (ret_val is False):
+            return action_result.set_status(phantom.APP_ERROR, ret_data)
+
+        container_info = ret_data
+
+        self.debug_print("Container info: ", container_info)
+
+        endpoint = '/events'
+
+        events = []
+
+        domain = param[OPENDNSUMB_JSON_DOMAIN]
+
+        event = {
+                'deviceId': self.get_product_installation_id(),
+                'deviceVersion': self.get_product_version(),
+                'eventTime': datetime.strptime(container_info['create_time'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%dT%H:%M:%S.0Z'),
+                'alertTime': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.0Z'),
+                'dstDomain': domain,
+                'dstUrl': 'http://{0}/'.format(domain),
+                'protocolVersion': '1.0a',
+                'providerName': 'Security Platform',
+                'disableDstSafeguards': param.get(OPENDNSUMB_JSON_DISABLE_SAFEGUARDS, False),
+                'eventType': container_info['label'],
+                'eventSeverity': container_info['severity']}
+
+        self.debug_print("Event:", event)
+
+        events.append(event)
+
+        ret_val, response, status_code = self._make_post_rest_call(endpoint, action_result, data=events)
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, OPENDNSUMB_LIST_UPDATED_WITH_GUID, id=response['id'])
+
+    def handle_action(self, param):
+        """Function that handles all the actions
+
+            Args:
+
+            Return:
+                A status code
+        """
+
+        # Get the action that we are supposed to carry out, set it in the connection result object
+        action = self.get_action_identifier()
+
+        ret_val = phantom.APP_SUCCESS
+
+        if (action == self.ACTION_ID_LIST_BLOCKED_DOMAINS):
+            ret_val = self._list_blocked_domains(param)
+        elif (action == self.ACTION_ID_BLOCK_DOMAIN):
+            ret_val = self._block_domain(param)
+        elif (action == self.ACTION_ID_UNBLOCK_DOMAIN):
+            ret_val = self._unblock_domain(param)
+        elif (action == phantom.ACTION_ID_TEST_ASSET_CONNECTIVITY):
+            ret_val = self._test_connectivity(param)
+
+        return ret_val
+
+if __name__ == '__main__':
+
+    import sys
+    # import simplejson as json
+    import pudb
+
+    pudb.set_trace()
+
+    with open(sys.argv[1]) as f:
+        in_json = f.read()
+        in_json = json.loads(in_json)
+        print(json.dumps(in_json, indent=' ' * 4))
+
+        connector = OpendnsumbrellaConnector()
+        connector._handle_action(json.dumps(in_json), None)
+
+    exit(0)
