@@ -24,8 +24,6 @@ import requests
 import simplejson as json
 from datetime import datetime
 
-requests.packages.urllib3.disable_warnings()
-
 
 class OpendnsumbrellaConnector(BaseConnector):
 
