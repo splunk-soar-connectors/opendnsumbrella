@@ -1,254 +1,243 @@
 {
-    "appid": "5cc62f57-dbf5-4c20-88ab-f16ace3bbf0b",
-    "name": "OpenDNS Umbrella",
+    "appid"    : "5cc62f57-dbf5-4c20-88ab-f16ace3bbf0b",
+    "name"   : "OpenDNS Umbrella",
     "description": "This app allows management of a domain list on the OpenDNS Umbrella Security platform by implementing actions like 'block domain', 'unblock domain' and 'list blocked domains'.",
     "type": "endpoint",
     "main_module": "opendnsumbrella_connector.pyc",
-    "app_version": "1.2.20",
-    "utctime_updated": "2017-12-21T03:22:47.000000Z",
+    "app_version": "1.2.18",
+    "utctime_updated": "2017-08-10T00:27:32.000000Z",
     "product_vendor": "OpenDNS",
     "product_name": "OpenDNS Umbrella",
     "product_version_regex": ".*",
     "min_phantom_version": "3.0.190",
     "publisher": "Phantom",
     "package_name": "phantom_opendnsumbrella",
-    "logo": "logo_opendns.svg",
-    "logo_dark": "logo_opendns_dark.svg",
+    "logo": "opendns.png",
     "license": "Copyright (c) Phantom Cyber Corporation 2015-2016",
     "configuration": {
-        "customer_key": {
-            "data_type": "string",
-            "order": 0,
-            "description": "OpenDNS Customer key",
-            "required": true
-        },
-        "verify_server_cert": {
-            "data_type": "boolean",
-            "description": "Verify server certificate",
-            "required": true,
-            "order": 1,
-            "default": true
-        }
+      "customer_key" : {
+        "data_type": "string",
+        "order": 0,
+        "description": "OpenDNS Customer key",
+        "required": true
+      },
+      "verify_server_cert": {
+        "data_type": "boolean",
+        "description": "Verify server certificate",
+        "required": true,
+        "order": 1,
+        "default": true
+      }
     },
     "actions": [
-        {
-            "action": "test connectivity",
-            "description": "Validate the asset configuration for connectivity.",
-            "type": "test",
-            "identifier": "test_asset_connectivity",
-            "read_only": true,
-            "parameters": {},
-            "output": [],
-            "versions": "EQ(*)"
+      {
+        "action": "test connectivity",
+        "description": "Validate the asset configuration for connectivity.",
+        "type": "test",
+        "identifier": "test_asset_connectivity",
+        "read_only": true,
+        "parameters": {
         },
-        {
-            "action": "list blocked domains",
-            "description": "Queries OpenDNS for the blocked domain list.",
-            "type": "investigate",
-            "identifier": "list_blocked_domains",
-            "read_only": true,
-            "parameters": {},
-            "render": {
-                "width": 12,
-                "title": "List Blocked Domains",
-                "type": "table",
-                "height": 5
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.data.*.id",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.data.*.name",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "numeric",
-                    "contains": [
-                        "opendns domain id"
-                    ],
-                    "column_name": "Domain ID",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.meta.limit",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.next",
-                    "data_type": "boolean"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.page",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.prev",
-                    "data_type": "boolean"
-                },
-                {
-                    "data_path": "action_result.data.*.name",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "column_name": "Domain",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.summary.total_domains",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
-                }
-            ],
-            "versions": "EQ(*)"
+        "output": [],
+        "versions":"EQ(*)"
+      },
+      {
+        "action": "list blocked domains",
+        "description": "Queries OpenDNS for the blocked domain list.",
+        "type": "investigate",
+        "identifier":"list_blocked_domains",
+        "read_only": true,
+        "parameters": {
         },
-        {
-            "action": "block domain",
-            "description": "Block a domain",
-            "type": "contain",
-            "identifier": "block_domain",
-            "read_only": false,
-            "undo": "unblock domain",
-            "verbose": "OpenDNS has many safeguards in place before adding a domain to a block list. These are present to protect against accidentally submitting domains for highly popular or known sites like google.com. If 'disable_safeguards' parameter is set to True (or checked), those safeguards will be bypassed. This could potentially allow adding a well-known domain like google.com to a domain block list.",
-            "parameters": {
-                "domain": {
-                    "description": "Domain to block",
-                    "data_type": "string",
-                    "order": 0,
-                    "contains": [
-                        "domain"
-                    ],
-                    "primary": true,
-                    "required": true
-                },
-                "disable_safeguards": {
-                    "description": "Disable safeguards while blocking the domain",
-                    "data_type": "boolean",
-                    "order": 1,
-                    "required": false,
-                    "value": false
-                }
-            },
-            "render": {
-                "width": 12,
-                "title": "Block Domain",
-                "type": "table",
-                "height": 5
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "column_name": "Status",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.parameter.disable_safeguards",
-                    "data_type": "boolean"
-                },
-                {
-                    "data_path": "action_result.parameter.domain",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "column_name": "Domain",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "string",
-                    "column_name": "ID",
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
-                }
-            ],
-            "versions": "EQ(*)"
+        "render": {
+          "width": 12,
+          "title": "List Blocked Domains",
+          "type": "table",
+          "height": 5
         },
-        {
-            "action": "unblock domain",
-            "description": "Unblock a domain",
-            "type": "correct",
-            "identifier": "unblock_domain",
-            "read_only": false,
-            "undo": "block domain",
-            "parameters": {
-                "domain": {
-                    "description": "Domain to unblock",
-                    "data_type": "string",
-                    "order": 0,
-                    "contains": [
-                        "domain"
-                    ],
-                    "primary": true,
-                    "required": true
-                }
-            },
-            "render": {
-                "width": 12,
-                "title": "Unblock Domain",
-                "type": "table",
-                "height": 5
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "column_name": "Status",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.parameter.domain",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "column_name": "Domain",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric"
-                }
-            ],
-            "versions": "EQ(*)"
-        }
+        "output": [
+          {
+            "data_path": "action_result.status",
+            "data_type": "string"
+          },
+          {
+            "data_path": "action_result.message",
+            "data_type": "string"
+          },
+          {
+            "data_path": "action_result.data.*.meta.prev",
+            "data_type": "boolean"
+          },
+          {
+            "data_path": "action_result.data.*.meta.limit",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "action_result.data.*.meta.page",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "action_result.data.*.meta.next",
+            "data_type": "boolean"
+          },
+          {
+            "data_path": "action_result.data.*.data.*.id",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "action_result.data.*.data.*.name",
+            "data_type": "string"
+          },
+          {
+            "data_path": "action_result.data.*.id",
+            "data_type": "numeric",
+            "contains": [ "opendns domain id" ],
+            "column_name": "Domain ID",
+            "column_order": 1
+          },
+          {
+            "data_path": "action_result.data.*.name",
+            "data_type": "string",
+            "contains": [ "domain" ],
+            "column_name": "Domain",
+            "column_order": 0
+          },
+          {
+            "data_path": "action_result.summary.total_domains",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "summary.total_objects",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "summary.total_objects_successful",
+            "data_type": "numeric"
+          }
+        ],
+        "versions": "EQ(*)"
+      },
+      {
+        "action": "block domain",
+        "description": "Block a domain",
+        "type": "contain",
+        "identifier":"block_domain",
+        "read_only": false,
+        "undo":"unblock domain",
+        "verbose": "OpenDNS has many safeguards in place before adding a domain to a block list. These are present to protect against accidentally submitting domains for highly popular or known sites like google.com. If 'disable_safeguards' parameter is set to True (or checked), those safeguards will be bypassed. This could potentially allow adding a well-known domain like google.com to a domain block list.",
+        "parameters": {
+          "domain": {
+            "description": "Domain to block",
+            "data_type": "string",
+            "order": 0,
+            "contains": ["domain"],
+            "primary": true,
+            "required": true
+          },
+          "disable_safeguards": {
+            "description": "Disable safeguards while blocking the domain",
+            "data_type": "boolean",
+            "order": 1,
+            "required": false,
+            "value": false
+          }
+        },
+        "render": {
+          "width": 12,
+          "title": "Block Domain",
+          "type": "table",
+          "height": 5
+        },
+        "output": [
+          {
+            "data_path": "action_result.status",
+            "data_type": "string",
+            "column_name": "Status",
+            "column_order": 1
+          },
+          {
+            "data_path": "action_result.parameter.disable_safeguards",
+            "data_type": "boolean"
+          },
+          {
+            "data_path": "action_result.parameter.domain",
+            "data_type": "string",
+            "contains": [ "domain" ],
+            "column_name": "Domain",
+            "column_order": 0
+          },
+          {
+            "data_path": "action_result.message",
+            "data_type": "string"
+          },
+          {
+            "data_path": "action_result.data.*.id",
+            "data_type": "string",
+            "column_name": "ID",
+            "column_order": 2
+          },
+          {
+            "data_path": "summary.total_objects",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "summary.total_objects_successful",
+            "data_type": "numeric"
+          }
+        ],
+        "versions": "EQ(*)"
+      },
+      {
+        "action": "unblock domain",
+        "description": "Unblock a domain",
+        "type": "correct",
+        "identifier":"unblock_domain",
+        "read_only": false,
+        "undo":"block domain",
+        "parameters": {
+          "domain": {
+            "description": "Domain to unblock",
+            "data_type": "string",
+            "order": 0,
+            "contains": ["domain"],
+            "primary": true,
+            "required": true
+          }
+        },
+        "render": {
+          "width": 12,
+          "title": "Unblock Domain",
+          "type": "table",
+          "height": 5
+        },
+        "output": [
+          {
+            "data_path": "action_result.status",
+            "data_type": "string",
+            "column_name": "Status",
+            "column_order": 1
+          },
+          {
+            "data_path": "action_result.parameter.domain",
+            "data_type": "string",
+            "contains": [ "domain" ],
+            "column_name": "Domain",
+            "column_order": 0
+          },
+          {
+            "data_path": "action_result.message",
+            "data_type": "string"
+          },
+          {
+            "data_path": "summary.total_objects",
+            "data_type": "numeric"
+          },
+          {
+            "data_path": "summary.total_objects_successful",
+            "data_type": "numeric"
+          }
+        ],
+        "versions": "EQ(*)"
+      }
     ]
 }
