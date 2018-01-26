@@ -5,7 +5,7 @@
     "type": "endpoint",
     "main_module": "opendnsumbrella_connector.pyc",
     "app_version": "1.2.20",
-    "utctime_updated": "2018-01-25T03:04:49.000000Z",
+    "utctime_updated": "2018-01-26T00:49:06.000000Z",
     "product_vendor": "OpenDNS",
     "product_name": "OpenDNS Umbrella",
     "product_version_regex": ".*",
