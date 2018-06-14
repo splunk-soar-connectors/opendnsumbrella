@@ -12,8 +12,9 @@
     "min_phantom_version": "3.0.190",
     "publisher": "Phantom",
     "package_name": "phantom_opendnsumbrella",
-    "logo": "opendns.png",
-    "license": "Copyright (c) Phantom Cyber Corporation 2015-2016",
+    "logo": "logo_opendns.svg",
+    "logo_dark": "logo_opendns_dark.svg",
+    "license": "Copyright (c) Phantom Cyber Corporation, 2015-2018",
     "configuration": {
         "customer_key": {
             "data_type": "string",
