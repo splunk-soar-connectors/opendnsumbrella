@@ -15,11 +15,16 @@
 
 OPENDNSUMB_JSON_DOMAIN = "domain"
 OPENDNSUMB_JSON_CUSTKEY = "customer_key"
+OPENDNSUMB_JSON_APIKEY = "api_key"
+OPENDNSUMB_JSON_APISECRET = "api_secret"
 OPENDNSUMB_JSON_PAGE_INDEX = "page_index"
 OPENDNSUMB_JSON_DOMAIN_LIMIT = "limit"
 OPENDNSUMB_JSON_TOTAL_DOMAINS = "total_domains"
 OPENDNSUMB_JSON_DISABLE_SAFEGUARDS = "disable_safeguards"
 OPENDNSUMB_LIST_UPDATED_WITH_GUID = "REST API returned success with id: {id}"
+OPENDNSUMB_LIST_RETRIEVED = "Successfully retrieved destination lists"
+OPENDNSUMB_DESTINATION_ADDED = "Successfully added destination to list"
+OPENDNSUMB_DESTINATION_REMOVED = "Successfully removed destination from list"
 
 OPENDNSUMB_ERR_CONNECTIVITY_TEST = "Connectivity test failed"
 OPENDNSUMB_SUCC_CONNECTIVITY_TEST = "Connectivity test passed"

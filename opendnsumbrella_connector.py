@@ -23,6 +23,7 @@ from opendnsumbrella_consts import *
 import requests
 import simplejson as json
 from datetime import datetime
+import base64
 
 
 class OpendnsumbrellaConnector(BaseConnector):
@@ -31,6 +32,10 @@ class OpendnsumbrellaConnector(BaseConnector):
     ACTION_ID_LIST_BLOCKED_DOMAINS = "list_blocked_domains"
     ACTION_ID_BLOCK_DOMAIN = "block_domain"
     ACTION_ID_UNBLOCK_DOMAIN = "unblock_domain"
+    ACTION_ID_LIST_DESTINATION_LISTS = "list_destination_lists"
+    ACTION_ID_ADD_DESTINATION = "add_destination"
+    ACTION_ID_GET_DESTINATION_LIST = "get_destination_list"
+    ACTION_ID_REMOVE_DESTINATION = "remove_destination"
 
     def __init__(self):
 
@@ -70,7 +75,9 @@ class OpendnsumbrellaConnector(BaseConnector):
 
         request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
 
-        headers = {'Content-Type': 'application/json'}
+        api_auth = 'Basic ' + base64.b64encode(config.get(OPENDNSUMB_JSON_APIKEY) + ':' + config.get(OPENDNSUMB_JSON_APISECRET)) if config.get(OPENDNSUMB_JSON_APIKEY) else None
+
+        headers = {'Content-Type': 'application/json', 'Authorization': api_auth}
 
         resp_json = None
         status_code = None
@@ -99,20 +106,27 @@ class OpendnsumbrellaConnector(BaseConnector):
 
         return (phantom.APP_SUCCESS, resp_json, status_code)
 
-    def _make_rest_call(self, endpoint, action_result, request_params={}):
+    def _make_rest_call(self, endpoint, action_result, request_params={}, api_type='enforcement', method='GET', data={}):
 
         config = self.get_config()
 
-        request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
-
         headers = {'Content-Type': 'application/json'}
+
+        if api_type == 'enforcement':
+            request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
+        if api_type in ['management']:
+            api_auth = 'Basic ' + base64.b64encode(config.get(OPENDNSUMB_JSON_APIKEY) + ':' + config.get(OPENDNSUMB_JSON_APISECRET)) if config.get(OPENDNSUMB_JSON_APIKEY) else None
+            headers['Authorization'] = api_auth
+            self._base_url = 'https://management.api.umbrella.com/v1'
 
         resp_json = None
         status_code = None
 
         try:
-            r = requests.get(self._base_url + endpoint, headers=headers, params=request_params, verify=config[phantom.APP_JSON_VERIFY])
+            # r = requests.post(self._base_url + endpoint, headers=headers, data=data, params=request_params, verify=config[phantom.APP_JSON_VERIFY])
+            r = requests.request(method=method, url=self._base_url + endpoint, headers=headers, params=request_params, data=json.dumps(data), verify=config[phantom.APP_JSON_VERIFY])
         except Exception as e:
+            # return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_SERVER_CONNECTION, e), resp_json, status_code)
             return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_SERVER_CONNECTION, e), resp_json, status_code)
 
         # self.debug_print('REST url: {0}'.format(r.url))
@@ -120,12 +134,15 @@ class OpendnsumbrellaConnector(BaseConnector):
         try:
             resp_json = r.json()
         except:
+            action_result.add_data(r.text)
             return (action_result.set_status(phantom.APP_ERROR, "Response not a valid json"), resp_json, status_code)
 
         status_code = r.status_code
 
         # if (r.status_code == 204):  # success, but no data
         #     return (phantom.APP_SUCCESS, resp_json, status_code)
+        if (r.status_code == 202):  # success, return from here, requests treats 202 as !ok
+            return (phantom.APP_SUCCESS, resp_json, status_code)
 
         if (r.status_code != requests.codes.ok):  # pylint: disable=E1101
             return (action_result.set_status(phantom.APP_ERROR, OPENDNSUMB_ERR_FROM_SERVER, status=r.status_code,
@@ -138,8 +155,9 @@ class OpendnsumbrellaConnector(BaseConnector):
         config = self.get_config()
 
         request_params.update({'customerKey': config[OPENDNSUMB_JSON_CUSTKEY]})
+        api_auth = 'Basic ' + base64.b64encode(config.get(OPENDNSUMB_JSON_APIKEY) + ':' + config.get(OPENDNSUMB_JSON_APISECRET)) if config.get(OPENDNSUMB_JSON_APIKEY) else None
 
-        headers = {'Content-Type': 'application/json'}
+        headers = {'Content-Type': 'application/json', 'Authorization': api_auth}
 
         resp_json = None
         status_code = None
@@ -307,7 +325,8 @@ class OpendnsumbrellaConnector(BaseConnector):
 
         events.append(event)
 
-        ret_val, response, status_code = self._make_post_rest_call(endpoint, action_result, data=events)
+        # ret_val, response, status_code = self._make_post_rest_call(endpoint, action_result, data=events)
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, data=events, method='POST')
 
         if (phantom.is_fail(ret_val)):
             self.debug_print(action_result.get_message())
@@ -316,6 +335,85 @@ class OpendnsumbrellaConnector(BaseConnector):
         action_result.add_data(response)
 
         return action_result.set_status(phantom.APP_SUCCESS, OPENDNSUMB_LIST_UPDATED_WITH_GUID, id=response['id'])
+
+    def _list_destination_lists(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        organization_id = param['organization_id']
+        endpoint = '/organizations/{}/destinationlists'.format(organization_id)
+
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, api_type='management')
+
+        if (phantom.is_fail(ret_val)):
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, OPENDNSUMB_LIST_RETRIEVED)
+
+    def _add_destination(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        # self.save_progress(OPENDNSUMB_USING_BASE_URL, base_url=self._base_url)
+
+        organization_id = param['organization_id']
+        destination_list_id = param['destination_list_id']
+        destinations = param['destination']
+        comment = param['comment']
+        endpoint = '/organizations/{}/destinationlists/{}/destinations'.format(organization_id, destination_list_id)
+
+        data = []
+        for destination in destinations.split(','):
+            dest_dict = {"destination": destination, "comment": comment}
+            data.append(dest_dict)
+
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, data=data, method='POST', api_type='management')
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, OPENDNSUMB_DESTINATION_ADDED)
+
+    def _remove_destination(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        organization_id = param['organization_id']
+        destination_list_id = param['destination_list_id']
+        destination_ids = param['destination_id']
+        endpoint = '/organizations/{}/destinationlists/{}/destinations/remove'.format(organization_id, destination_list_id)
+
+        data = []
+        data = destination_ids.split(',')
+
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, data=data, method='DELETE', api_type='management')
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, OPENDNSUMB_DESTINATION_REMOVED)
+
+    def _get_destination_list(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        organization_id = param['organization_id']
+        destination_list_id = param['destination_list_id']
+        endpoint = '/organizations/{}/destinationlists/{}/destinations'.format(organization_id, destination_list_id)
+
+        ret_val, response, status_code = self._make_rest_call(endpoint, action_result, method='GET', api_type='management')
+
+        if (phantom.is_fail(ret_val)):
+            self.debug_print(action_result.get_message())
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, OPENDNSUMB_LIST_RETRIEVED)
 
     def handle_action(self, param):
         """Function that handles all the actions
@@ -337,6 +435,14 @@ class OpendnsumbrellaConnector(BaseConnector):
             ret_val = self._block_domain(param)
         elif (action == self.ACTION_ID_UNBLOCK_DOMAIN):
             ret_val = self._unblock_domain(param)
+        if (action == self.ACTION_ID_LIST_DESTINATION_LISTS):
+            ret_val = self._list_destination_lists(param)
+        if (action == self.ACTION_ID_ADD_DESTINATION):
+            ret_val = self._add_destination(param)
+        if (action == self.ACTION_ID_REMOVE_DESTINATION):
+            ret_val = self._remove_destination(param)
+        if (action == self.ACTION_ID_GET_DESTINATION_LIST):
+            ret_val = self._get_destination_list(param)
         elif (action == phantom.ACTION_ID_TEST_ASSET_CONNECTIVITY):
             ret_val = self._test_connectivity(param)
 
