@@ -3,7 +3,7 @@
     "name": "OpenDNS Umbrella",
     "description": "This app allows management of a domain list on the OpenDNS Umbrella Security platform",
     "type": "endpoint",
-    "main_module": "opendnsumbrella_connector.pyc",
+    "main_module": "opendnsumbrella_connector.py",
     "app_version": "1.2.24",
     "utctime_updated": "2019-05-02T19:53:29.000000Z",
     "product_vendor": "OpenDNS",
