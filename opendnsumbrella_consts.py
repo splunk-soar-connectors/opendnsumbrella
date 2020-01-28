@@ -1,16 +1,8 @@
-# --
-# File: opendnsumbrella_connector.py
+# File: opendnsumbrella_consts.py
+# Copyright (c) 2014-2020 Splunk Inc.
 #
-# Copyright (c) Phantom Cyber Corporation, 2014-2018
-#
-# This unpublished material is proprietary to Phantom Cyber.
-# All rights reserved. The methods and
-# techniques described herein are considered trade secrets
-# and/or confidential. Reproduction or distribution, in whole
-# or in part, is forbidden except by express written permission
-# of Phantom Cyber.
-#
-# --
+# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
+# without a valid written license from Splunk Inc. is PROHIBITED.
 
 
 OPENDNSUMB_JSON_DOMAIN = "domain"
@@ -21,8 +13,8 @@ OPENDNSUMB_JSON_TOTAL_DOMAINS = "total_domains"
 OPENDNSUMB_JSON_DISABLE_SAFEGUARDS = "disable_safeguards"
 OPENDNSUMB_LIST_UPDATED_WITH_GUID = "REST API returned success with id: {id}"
 
-OPENDNSUMB_ERR_CONNECTIVITY_TEST = "Connectivity test failed"
-OPENDNSUMB_SUCC_CONNECTIVITY_TEST = "Connectivity test passed"
+OPENDNSUMB_ERR_CONNECTIVITY_TEST = "Test Connectivity Failed"
+OPENDNSUMB_SUCC_CONNECTIVITY_TEST = "Test Connectivity Passed"
 OPENDNSUMB_ERR_SERVER_CONNECTION = "Connection failed"
 OPENDNSUMB_ERR_FROM_SERVER = "API failed, Status code: {status}, Message: {message}"
 OPENDNSUMB_MSG_GET_DOMAIN_LIST_TEST = "Querying a single domain entry to check credentials"

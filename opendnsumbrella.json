@@ -1,23 +1,27 @@
 {
     "appid": "5cc62f57-dbf5-4c20-88ab-f16ace3bbf0b",
     "name": "OpenDNS Umbrella",
-    "description": "This app allows management of a domain list on the OpenDNS Umbrella Security platform by implementing actions like 'block domain', 'unblock domain' and 'list blocked domains'.",
+    "description": "This app allows management of a domain list on the OpenDNS Umbrella Security platform",
     "type": "endpoint",
-    "main_module": "opendnsumbrella_connector.pyc",
-    "app_version": "1.2.24",
+    "main_module": "opendnsumbrella_connector.py",
+    "app_version": "2.0.0",
     "utctime_updated": "2019-05-02T19:53:29.000000Z",
     "product_vendor": "OpenDNS",
     "product_name": "OpenDNS Umbrella",
     "product_version_regex": ".*",
-    "min_phantom_version": "3.0.190",
-    "publisher": "Phantom",
+    "min_phantom_version": "4.5.15922",
+    "latest_tested_versions": [
+        "Cloud, API s-platform.api.opendns, January 24 2020"
+    ],
+    "python_version": "3",
+    "publisher": "Splunk",
     "package_name": "phantom_opendnsumbrella",
     "logo": "logo_opendns.svg",
     "logo_dark": "logo_opendns_dark.svg",
-    "license": "Copyright (c) Phantom Cyber Corporation, 2015-2018",
+    "license": "Copyright (c) 2014-2020 Splunk Inc.",
     "configuration": {
         "customer_key": {
-            "data_type": "string",
+            "data_type": "password",
             "order": 0,
             "description": "OpenDNS Customer key",
             "required": true
@@ -33,7 +37,7 @@
     "actions": [
         {
             "action": "test connectivity",
-            "description": "Validate the asset configuration for connectivity.",
+            "description": "Validate the asset configuration for connectivity",
             "type": "test",
             "identifier": "test_asset_connectivity",
             "read_only": true,
@@ -43,7 +47,7 @@
         },
         {
             "action": "list blocked domains",
-            "description": "Queries OpenDNS for the blocked domain list.",
+            "description": "Queries OpenDNS for the blocked domain list",
             "type": "investigate",
             "identifier": "list_blocked_domains",
             "read_only": true,
