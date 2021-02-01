@@ -9,16 +9,16 @@
     "product_vendor": "OpenDNS",
     "product_name": "OpenDNS Umbrella",
     "product_version_regex": ".*",
-    "min_phantom_version": "4.5.15922",
+    "min_phantom_version": "4.9.39220",
     "latest_tested_versions": [
-        "Cloud, API s-platform.api.opendns, January 24 2020"
+        "Cloud, API s-platform.api.opendns, January 28 2021"
     ],
     "python_version": "3",
     "publisher": "Splunk",
     "package_name": "phantom_opendnsumbrella",
     "logo": "logo_opendns.svg",
     "logo_dark": "logo_opendns_dark.svg",
-    "license": "Copyright (c) 2014-2020 Splunk Inc.",
+    "license": "Copyright (c) 2014-2021 Splunk Inc.",
     "configuration": {
         "customer_key": {
             "data_type": "password",
@@ -29,7 +29,6 @@
         "verify_server_cert": {
             "data_type": "boolean",
             "description": "Verify server certificate",
-            "required": true,
             "order": 1,
             "default": true
         }
@@ -61,27 +60,11 @@
             "output": [
                 {
                     "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.prev",
-                    "data_type": "boolean"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.limit",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.page",
-                    "data_type": "numeric"
-                },
-                {
-                    "data_path": "action_result.data.*.meta.next",
-                    "data_type": "boolean"
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.data.*.id",
@@ -101,6 +84,22 @@
                     "column_order": 1
                 },
                 {
+                    "data_path": "action_result.data.*.meta.limit",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.meta.next",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.data.*.meta.page",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.meta.prev",
+                    "data_type": "boolean"
+                },
+                {
                     "data_path": "action_result.data.*.name",
                     "data_type": "string",
                     "contains": [
@@ -112,6 +111,10 @@
                 {
                     "data_path": "action_result.summary.total_domains",
                     "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -147,7 +150,6 @@
                     "description": "Disable safeguards while blocking the domain",
                     "data_type": "boolean",
                     "order": 1,
-                    "required": false,
                     "value": false
                 }
             },
@@ -162,7 +164,11 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "column_name": "Status",
-                    "column_order": 1
+                    "column_order": 1,
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.disable_safeguards",
@@ -178,14 +184,18 @@
                     "column_order": 0
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
                     "data_path": "action_result.data.*.id",
                     "data_type": "string",
                     "column_name": "ID",
                     "column_order": 2
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
@@ -228,7 +238,11 @@
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "column_name": "Status",
-                    "column_order": 1
+                    "column_order": 1,
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.domain",
@@ -238,6 +252,14 @@
                     ],
                     "column_name": "Domain",
                     "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
