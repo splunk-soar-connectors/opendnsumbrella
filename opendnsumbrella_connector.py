@@ -249,7 +249,7 @@ class OpendnsumbrellaConnector(BaseConnector):
 
         action_result.add_data(response)
 
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Domain successfully unblocked")
 
     def _block_domain(self, param):
 
